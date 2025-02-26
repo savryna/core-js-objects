@@ -75,11 +75,7 @@ function removeProperties(obj, keys) {
  *    compareObjects({a: 1, b: 2}, {a: 1, b: 3}) => false
  */
 function compareObjects(obj1, obj2) {
-  const arr1 = Object.entries(obj1);
-  const arr2 = Object.entries(obj2);
-  return arr1.every(
-    ([key, value], idx) => key === arr2[idx][0] && value === arr2[idx][1]
-  );
+  return String(Object.entries(obj1)) === String(Object.entries(obj2));
 }
 
 /**
@@ -94,7 +90,7 @@ function compareObjects(obj1, obj2) {
  *    isEmptyObject({a: 1}) => false
  */
 function isEmptyObject(obj) {
-  return Boolean(!Object.keys(obj).length);
+  return !Object.keys(obj).length;
 }
 
 /**
@@ -129,13 +125,11 @@ function makeImmutable(obj) {
  */
 function makeWord(lettersObject) {
   const resArr = [];
-  Object.entries(lettersObject).reduce((acc, cur) => {
-    const [letter, idx] = cur;
-    idx.forEach((i) => {
-      resArr[i] = letter;
+  Object.entries(lettersObject).forEach(([letter, positions]) => {
+    positions.forEach((pos) => {
+      resArr[pos] = letter;
     });
-    return resArr;
-  }, {});
+  });
   return resArr.join('');
 }
 
@@ -154,14 +148,19 @@ function makeWord(lettersObject) {
  *    sellTickets([25, 100]) => false (The seller does not have enough money to give change.)
  */
 function sellTickets(queue) {
-  const oneTicket = 25;
-  if (queue.length === 0) return true;
-  return queue.some((money, i) => {
-    const needReturn = money - oneTicket;
-    const haveChange =
-      queue.slice(0, i).reduce((acc, cur) => acc + cur, 0) - money;
-    return needReturn <= haveChange;
-  });
+  const cost = 25;
+  let surrender = 0;
+  for (let i = 0; i < queue.length; i += 1) {
+    const curPay = queue[i];
+    if (curPay > cost) {
+      surrender -= curPay - cost;
+      if (surrender < 0) {
+        return false;
+      }
+    }
+    surrender += curPay;
+  }
+  return true;
 }
 
 /**
@@ -208,8 +207,10 @@ function getJSON(obj) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  const objJSON = JSON.parse(json);
+  const createFromProto = Object.create(proto);
+  return Object.assign(createFromProto, objJSON);
 }
 
 /**
